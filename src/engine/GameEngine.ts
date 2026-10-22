@@ -57,6 +57,7 @@ export class GameEngine {
         "whackamole",
         "visual_block",
         "surround",
+        "snake",
       ];
       resolvedId = pool[Math.floor(Math.random() * pool.length)];
     }
@@ -127,9 +128,27 @@ export class GameEngine {
     this.onRoundAdvance(this.currentRound, this.totalRounds);
     this.roundStartTime = performance.now();
 
+    // Start continuous tick loop if supported (e.g. Snake)
+    if (this.activeRound.start) {
+      this.activeRound.start(
+        (canvasLines) => {
+          this.currentCanvasLines = canvasLines;
+          const updatedFull = [...headerLines, ...canvasLines].join("\n");
+          this.onRenderBuffer(updatedFull, targetCursorLine, render.cursorCol || 0);
+        },
+        (success) => {
+          this.handleRoundFinish(success);
+        },
+      );
+    }
+
     this.timerId = setTimeout(() => {
       this.handleRoundFinish(false);
     }, config.roundTime);
+  }
+
+  handleKeypress(key: string) {
+    this.activeRound?.handleKey?.(key);
   }
 
   handleBufferChange(fullText: string) {
@@ -215,5 +234,6 @@ export class GameEngine {
       clearTimeout(this.timerId);
       this.timerId = null;
     }
+    this.activeRound?.cleanup?.();
   }
 }

@@ -46,17 +46,24 @@ export function App() {
     sound.enabled = soundEnabled;
   }, [soundEnabled]);
 
-  const handleKeypress = useCallback((key: string) => {
-    const now = performance.now();
-    keyTimestamps.current.push(now);
+  const handleKeypress = useCallback(
+    (key: string) => {
+      const now = performance.now();
+      keyTimestamps.current.push(now);
 
-    keyTimestamps.current = keyTimestamps.current.filter((t) => now - t <= 1500);
-    const calculatedKps = keyTimestamps.current.length / 1.5;
-    setKps(calculatedKps);
+      keyTimestamps.current = keyTimestamps.current.filter((t) => now - t <= 1500);
+      const calculatedKps = keyTimestamps.current.length / 1.5;
+      setKps(calculatedKps);
 
-    setTotalKeys((prev) => prev + 1);
-    setKeystrokes((prev) => [...prev.slice(-7), key]);
-  }, []);
+      setTotalKeys((prev) => prev + 1);
+      setKeystrokes((prev) => [...prev.slice(-7), key]);
+
+      if (engineState === "playing" && gameEngine) {
+        gameEngine.handleKeypress(key);
+      }
+    },
+    [engineState, gameEngine],
+  );
 
   const handleReturnToMenu = useCallback(() => {
     gameEngine?.clearTimer();

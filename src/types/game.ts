@@ -34,6 +34,9 @@ export interface GameRound {
   getConfig(): RoundConfig;
   render(): RenderResult;
   checkForWin(lines: string[]): boolean;
+  start?(onUpdate: (canvasLines: string[]) => void, onEnd: (success: boolean) => void): void;
+  cleanup?(): void;
+  handleKey?(key: string): void;
 }
 
 export interface RoundRecord {
