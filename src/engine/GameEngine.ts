@@ -18,6 +18,7 @@ export class GameEngine {
   public currentInstructions: string[] = [];
   public currentCanvasLines: string[] = [];
   public isDestroyed = false;
+  private headerLineCount = 0;
 
   private timerId: ReturnType<typeof setTimeout> | null = null;
   private countdownTimeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -130,6 +131,7 @@ export class GameEngine {
             ...this.currentInstructions,
             "",
           ];
+    this.headerLineCount = headerLines.length;
 
     const fullLines = [...headerLines, ...this.currentCanvasLines];
     const fullText = fullLines.join("\n");
@@ -169,8 +171,7 @@ export class GameEngine {
     if (!this.activeRound) return;
 
     const allLines = fullText.split("\n");
-    const headerCount = this.currentInstructions.length + 2;
-    const canvasLines = allLines.slice(headerCount);
+    const canvasLines = allLines.slice(this.headerLineCount);
 
     if (this.activeRound.checkForWin(canvasLines)) {
       this.handleRoundFinish(true);

@@ -45,7 +45,8 @@ export class HjklRound implements GameRound {
     let cursorCol = Math.floor(Math.random() * boardSize);
     let cursorLine = Math.floor(Math.random() * boardSize);
 
-    while (xLine === cursorLine || xCol === cursorCol) {
+    let attempts = 0;
+    while ((xLine === cursorLine || xCol === cursorCol) && attempts++ < 100) {
       xCol = Math.floor(Math.random() * boardSize);
       xLine = Math.floor(Math.random() * boardSize);
       cursorCol = Math.floor(Math.random() * boardSize);

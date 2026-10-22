@@ -35,10 +35,21 @@ export class WhackAMoleRound implements GameRound {
 
     let chosenIndex = 0;
     let found = false;
-    while (!found) {
+    let attempts = 0;
+    while (!found && attempts++ < 500) {
       chosenIndex = Math.floor(Math.random() * sentence.length);
-      if (sentence[chosenIndex] !== " ") {
+      if (/[a-zA-Z]/.test(sentence[chosenIndex])) {
         found = true;
+      }
+    }
+
+    if (!found) {
+      for (let i = 0; i < sentence.length; i++) {
+        if (/[a-zA-Z]/.test(sentence[i])) {
+          chosenIndex = i;
+          found = true;
+          break;
+        }
       }
     }
 

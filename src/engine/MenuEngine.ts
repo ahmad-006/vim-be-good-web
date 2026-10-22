@@ -89,7 +89,8 @@ export class MenuEngine {
     const expected = this.renderMenuLines();
 
     if (currentLines.length === expected.length) {
-      return { action: "none" };
+      const isMismatch = currentLines.some((line, idx) => line !== expected[idx]);
+      return isMismatch ? { action: "rerender" } : { action: "none" };
     }
 
     const missingLine = expected.find((line) => !currentLines.includes(line));

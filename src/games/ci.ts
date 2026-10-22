@@ -32,9 +32,6 @@ export class CiRound implements GameRound {
   }
 
   getConfig(): RoundConfig {
-    this.isIfStatement = Math.random() > 0.5;
-    this.targetWord = getRandomWord();
-
     return {
       roundTime: DIFFICULTY_TIME_MAP[this.difficulty],
       instructions: this.instructions,
@@ -42,6 +39,9 @@ export class CiRound implements GameRound {
   }
 
   render(): RenderResult {
+    this.isIfStatement = Math.random() > 0.5;
+    this.targetWord = getRandomWord();
+
     const gameLineCount = 18;
     const lines = createEmptyLines(gameLineCount);
     const insertionIndex = Math.floor(Math.random() * (gameLineCount - 7)) + 1;
@@ -78,15 +78,15 @@ export class CiRound implements GameRound {
 
   checkForWin(lines: string[]): boolean {
     const cleanLines = lines.map((l) => l.trim()).filter((l) => l.length > 0);
-    const concatenated = cleanLines.join("").toLowerCase();
+    const normalized = cleanLines.join("").replace(/\s+/g, "").toLowerCase();
 
     if (this.isIfStatement) {
       return (
-        concatenated === `if(${this.targetWord}){bar}` ||
-        concatenated === `if (${this.targetWord}) {bar}`
+        normalized === `if(${this.targetWord.toLowerCase()}){bar}` ||
+        normalized === `if(${this.targetWord.toLowerCase()}){"bar"}`
       );
     } else {
-      return concatenated === `[bar]`;
+      return normalized === `[bar]` || normalized === `["bar"]`;
     }
   }
 }

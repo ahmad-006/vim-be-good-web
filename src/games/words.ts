@@ -21,27 +21,6 @@ export class WordsRound implements GameRound {
   }
 
   getConfig(): RoundConfig {
-    const commonWord = getRandomWord();
-    let intruderWord = getRandomWord();
-    while (intruderWord === commonWord) {
-      intruderWord = getRandomWord();
-    }
-
-    const words: string[] = [];
-    const expected: string[] = [];
-    const intruderIdx = Math.floor(Math.random() * 6);
-
-    for (let i = 0; i < 6; i++) {
-      if (i === intruderIdx) {
-        words.push(intruderWord);
-      } else {
-        words.push(commonWord);
-        expected.push(commonWord);
-      }
-    }
-
-    this.expectedLine = expected.join(" ").toLowerCase();
-
     return {
       roundTime: DIFFICULTY_TIME_MAP[this.difficulty],
       instructions: this.instructions,

@@ -9,10 +9,40 @@ import { NeovimWindow } from "./components/NeovimWindow";
 import { KeystrokeHUD } from "./components/KeystrokeHUD";
 import { StatsModal } from "./components/StatsModal";
 
+const STORAGE_KEYS = {
+  THEME: "vbg_theme",
+  SOUND: "vbg_sound",
+  SCANLINES: "vbg_scanlines",
+} as const;
+
+function getInitialTheme(): ThemeName {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEYS.THEME) as ThemeName | null;
+    if (saved && saved in THEMES) return saved;
+  } catch {}
+  return "catppuccin";
+}
+
+function getInitialSound(): boolean {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEYS.SOUND);
+    if (saved !== null) return saved === "true";
+  } catch {}
+  return true;
+}
+
+function getInitialScanlines(): boolean {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEYS.SCANLINES);
+    if (saved !== null) return saved === "true";
+  } catch {}
+  return false;
+}
+
 export function App() {
-  const [currentTheme, setCurrentTheme] = useState<ThemeName>("catppuccin");
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [scanlinesEnabled, setScanlinesEnabled] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState<ThemeName>(getInitialTheme);
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(getInitialSound);
+  const [scanlinesEnabled, setScanlinesEnabled] = useState<boolean>(getInitialScanlines);
 
   const [engineState, setEngineState] = useState<EngineState>("menu");
   const [menuEngine] = useState(() => new MenuEngine("relative", "easy"));
@@ -46,7 +76,22 @@ export function App() {
 
   useEffect(() => {
     sound.enabled = soundEnabled;
+    try {
+      localStorage.setItem(STORAGE_KEYS.SOUND, String(soundEnabled));
+    } catch {}
   }, [soundEnabled]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.THEME, currentTheme);
+    } catch {}
+  }, [currentTheme]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.SCANLINES, String(scanlinesEnabled));
+    } catch {}
+  }, [scanlinesEnabled]);
 
   const handleKeypress = useCallback(
     (key: string) => {

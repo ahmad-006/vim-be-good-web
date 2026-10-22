@@ -10,7 +10,7 @@ class SoundEngine {
       this.ctx = new AudioCtx();
     }
     if (this.ctx.state === "suspended") {
-      void this.ctx.resume();
+      void this.ctx.resume().catch(() => {});
     }
   }
 

@@ -50,8 +50,14 @@ export class VisualBlockRound implements GameRound {
 
   checkForWin(lines: string[]): boolean {
     const activeLines = lines.filter((l) => l.trim().length > 0);
-    if (activeLines.length < 5) return false;
+    if (activeLines.length !== 5) return false;
 
-    return activeLines.every((line) => line.trim().startsWith("//"));
+    const expectedKeys = ["port", "host", "timeout", "verbose", "debug"];
+    const allCommented = activeLines.every((line) => line.trim().startsWith("//"));
+    const keysPreserved = expectedKeys.every((key) =>
+      activeLines.some((line) => line.includes(key)),
+    );
+
+    return allCommented && keysPreserved;
   }
 }

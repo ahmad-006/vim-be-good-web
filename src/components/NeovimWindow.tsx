@@ -217,6 +217,8 @@ export const NeovimWindow: React.FC<NeovimWindowProps> = ({
       Vim.defineEx("q!", "q!", () => {
         onCancelGameRef.current?.();
       });
+      Vim.map("ZZ", ":q<CR>", "normal");
+      Vim.map("ZQ", ":q!<CR>", "normal");
     } catch {}
 
     view.focus();

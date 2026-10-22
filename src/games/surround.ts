@@ -21,7 +21,6 @@ export class SurroundRound implements GameRound {
   }
 
   getConfig(): RoundConfig {
-    this.targetWord = getRandomWord();
     return {
       roundTime: DIFFICULTY_TIME_MAP[this.difficulty],
       instructions: this.instructions,
