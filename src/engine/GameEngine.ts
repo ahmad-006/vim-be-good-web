@@ -40,7 +40,7 @@ export class GameEngine {
   ) {
     this.gameId = gameId;
     this.difficulty = difficulty;
-    this.totalRounds = difficulty === "noob" ? 100000 : 10;
+    this.totalRounds = gameId === "snake" ? 1 : difficulty === "noob" ? 100000 : 10;
     this.onRenderBuffer = callbacks.onRenderBuffer;
     this.onRoundAdvance = callbacks.onRoundAdvance;
     this.onGameOver = callbacks.onGameOver;
@@ -113,11 +113,14 @@ export class GameEngine {
     this.currentInstructions = this.activeRound.getInstructions();
     this.currentCanvasLines = render.lines;
 
-    const headerLines = [
-      `=== [VimBeGood] Round ${this.currentRound} / ${this.totalRounds} ===`,
-      ...this.currentInstructions,
-      "",
-    ];
+    const headerLines =
+      config.isContinuous || this.gameId === "snake"
+        ? [`=== [VimBeGood] Snake Arcade ===`, ...this.currentInstructions, ""]
+        : [
+            `=== [VimBeGood] Round ${this.currentRound} / ${this.totalRounds} ===`,
+            ...this.currentInstructions,
+            "",
+          ];
 
     const fullLines = [...headerLines, ...this.currentCanvasLines];
     const fullText = fullLines.join("\n");
@@ -142,9 +145,11 @@ export class GameEngine {
       );
     }
 
-    this.timerId = setTimeout(() => {
-      this.handleRoundFinish(false);
-    }, config.roundTime);
+    if (config.roundTime > 0) {
+      this.timerId = setTimeout(() => {
+        this.handleRoundFinish(false);
+      }, config.roundTime);
+    }
   }
 
   handleKeypress(key: string) {
@@ -176,6 +181,7 @@ export class GameEngine {
     }
 
     this.timings.push(duration);
+    const roundScore = (this.activeRound as { getScore?: () => number })?.getScore?.();
     this.records.push({
       roundNum: this.currentRound,
       gameId: this.activeRound?.name || this.gameId,
@@ -183,6 +189,7 @@ export class GameEngine {
       success,
       timeTaken: duration,
       timestamp: Date.now(),
+      score: roundScore !== undefined ? roundScore : undefined,
     });
 
     if (this.currentRound >= this.totalRounds) {
@@ -197,6 +204,7 @@ export class GameEngine {
     this.clearTimer();
     const sum = this.timings.reduce((acc, curr) => acc + curr, 0);
     const average = this.timings.length > 0 ? sum / this.timings.length : 0;
+    const totalScore = this.records.reduce((acc, r) => acc + (r.score ? r.score * 10 : 0), 0);
 
     const summary: GameSummary = {
       difficulty: this.difficulty,
@@ -207,12 +215,30 @@ export class GameEngine {
       timings: this.timings,
       averageTime: parseFloat(average.toFixed(2)),
       records: this.records,
+      totalScore: this.gameId === "snake" ? totalScore : undefined,
     };
 
     this.onGameOver(summary);
   }
 
   getEndGameLines(summary: GameSummary): string[] {
+    if (summary.gameId === "snake") {
+      const foodsEaten = summary.records[0]?.score || 0;
+      const scorePoints = foodsEaten * 10;
+      return [
+        `=== [VimBeGood] Snake Game Over ===`,
+        "",
+        `Final Score: ${scorePoints} points (${foodsEaten} foods eaten)`,
+        `Time Survived: ${summary.averageTime}s (${summary.difficulty} speed)`,
+        "",
+        'Where do you want to go next? (Delete Line with "dd")',
+        "---------------------------------------------------",
+        "Menu",
+        "Replay",
+        "Quit (or just ZZ like a real man)",
+      ];
+    }
+
     return [
       `=== [VimBeGood] Game Over ===`,
       "",

@@ -14,15 +14,6 @@ const SPEED_MAP: Record<Difficulty, number> = {
   tpope: 45,
 };
 
-const TARGET_FOODS_MAP: Record<Difficulty, number> = {
-  noob: 3,
-  easy: 3,
-  medium: 4,
-  hard: 4,
-  nightmare: 5,
-  tpope: 5,
-};
-
 export class SnakeRound implements GameRound {
   id = "snake" as const;
   name = "snake";
@@ -38,7 +29,6 @@ export class SnakeRound implements GameRound {
   private food: Coord = { x: 30, y: 8 };
 
   private score = 0;
-  private targetFoods: number;
   private speed: number;
   private intervalId: ReturnType<typeof setInterval> | null = null;
   private isDead = false;
@@ -47,15 +37,14 @@ export class SnakeRound implements GameRound {
   private onEndCallback: ((success: boolean) => void) | null = null;
 
   private instructions = [
-    "Classic Snake inside Neovim buffer. Edges are continuous (wrap-around)!",
-    "Steer with h, j, k, l or Arrows • Eat food (O) to reach target score",
+    "Classic Continuous Snake inside Neovim buffer (Wrap-around edges).",
+    "Steer with h, j, k, l or Arrows • Eat food (O) to grow • Don't bite yourself!",
     "----------------------------------------------------------------------",
   ];
 
   constructor(difficulty: Difficulty) {
     this.difficulty = difficulty;
     this.speed = SPEED_MAP[difficulty] || 120;
-    this.targetFoods = TARGET_FOODS_MAP[difficulty] || 4;
     this.initSnake();
   }
 
@@ -91,16 +80,21 @@ export class SnakeRound implements GameRound {
     }
   }
 
+  getScore(): number {
+    return this.score;
+  }
+
   getInstructions(): string[] {
     return this.instructions;
   }
 
   getConfig(): RoundConfig {
     return {
-      roundTime: 60000,
+      roundTime: 0, // 0 = continuous/infinite arcade session
       instructions: this.instructions,
       noCursor: true,
       canEndRound: true,
+      isContinuous: true,
     };
   }
 
@@ -146,7 +140,7 @@ export class SnakeRound implements GameRound {
     const dirStr =
       this.dir.x === 1 ? "RIGHT" : this.dir.x === -1 ? "LEFT" : this.dir.y === 1 ? "DOWN" : "UP";
     lines.push(
-      `Score: ${this.score * 10} | Target: ${this.targetFoods * 10} | Foods: ${this.score}/${this.targetFoods} | Edges: Wrap | Dir: ${dirStr} | Speed: ${this.speed}ms`,
+      `Score: ${this.score * 10} | Foods: ${this.score} | Length: ${this.snake.length} | Edges: Wrap | Dir: ${dirStr} | Speed: ${this.speed}ms`,
     );
 
     return lines;
@@ -182,7 +176,7 @@ export class SnakeRound implements GameRound {
       y: (((head.y + this.dir.y) % this.height) + this.height) % this.height,
     };
 
-    // Check Self Collision
+    // Check Self Collision (Lethal!)
     if (this.snake.some((s) => s.x === newHead.x && s.y === newHead.y)) {
       this.handleDeath();
       return;
@@ -193,16 +187,12 @@ export class SnakeRound implements GameRound {
     this.snake.unshift(newHead);
 
     if (ateFood) {
+      // Grows by 1: do not pop tail!
       this.score += 1;
-      if (this.score >= this.targetFoods) {
-        this.cleanup();
-        this.onUpdateCallback?.(this.drawGrid());
-        this.onEndCallback?.(true); // Victory!
-        return;
-      }
       this.spawnFood();
     } else {
-      this.snake.pop(); // Remove tail
+      // Normal motion: pop tail to keep same length
+      this.snake.pop();
     }
 
     this.onUpdateCallback?.(this.drawGrid());
@@ -213,7 +203,7 @@ export class SnakeRound implements GameRound {
     this.cleanup();
     this.onUpdateCallback?.(this.drawGrid());
     setTimeout(() => {
-      this.onEndCallback?.(false); // Fail round
+      this.onEndCallback?.(false); // Fail / game over session
     }, 1200);
   }
 

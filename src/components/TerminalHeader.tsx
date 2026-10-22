@@ -13,6 +13,7 @@ interface TerminalHeaderProps {
   scanlinesEnabled: boolean;
   onToggleScanlines: () => void;
   onRestartMenu: () => void;
+  isPlaying?: boolean;
 }
 
 export const TerminalHeader: React.FC<TerminalHeaderProps> = ({
@@ -24,6 +25,7 @@ export const TerminalHeader: React.FC<TerminalHeaderProps> = ({
   scanlinesEnabled,
   onToggleScanlines,
   onRestartMenu,
+  isPlaying = false,
 }) => {
   return (
     <div
@@ -64,11 +66,22 @@ export const TerminalHeader: React.FC<TerminalHeaderProps> = ({
       <div className="flex items-center gap-1.5 sm:gap-2">
         <button
           onClick={onRestartMenu}
-          className="p-1.5 rounded hover:opacity-100 opacity-70 transition-all hover:bg-white/5 active:scale-95 text-xs flex items-center gap-1 font-mono"
-          title="Return to Menu"
+          className="p-1.5 px-2.5 rounded transition-all hover:brightness-125 active:scale-95 text-xs flex items-center gap-1.5 font-mono cursor-pointer"
+          style={
+            isPlaying
+              ? {
+                  backgroundColor: "rgba(243, 139, 168, 0.15)",
+                  color: theme.accentRed,
+                  border: "1px solid rgba(243, 139, 168, 0.4)",
+                }
+              : {
+                  opacity: 0.8,
+                }
+          }
+          title={isPlaying ? "Cancel current game and return to Menu (:q)" : "Return to Menu"}
         >
           <RotateCcw className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline text-[11px]">Menu</span>
+          <span className="text-[11px] font-semibold">{isPlaying ? "Exit to Menu" : "Menu"}</span>
         </button>
 
         <button

@@ -44,6 +44,20 @@
   pointer-events: none;
 }
 
+/* Visual mode and text selection highlight in CodeMirror 6 */
+.cm-selectionBackground,
+.cm-selectionLayer .cm-selectionBackground,
+.cm-focused .cm-selectionBackground,
+.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground,
+.cm-content ::selection,
+::selection {
+  background-color: rgba(137, 180, 250, 0.45) !important;
+}
+
+.cm-selectionMatch {
+  background-color: rgba(245, 224, 220, 0.3) !important;
+}
+
 /* Suppress CodeMirror cursor and active line highlighting in no-cursor mode (e.g., Snake) */
 .no-cursor .cm-cursor,
 .no-cursor .cm-cursorLayer,

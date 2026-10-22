@@ -167,6 +167,7 @@ export function App() {
         scanlinesEnabled={scanlinesEnabled}
         onToggleScanlines={() => setScanlinesEnabled((prev) => !prev)}
         onRestartMenu={handleReturnToMenu}
+        isPlaying={engineState !== "menu"}
       />
 
       <main className="flex-1 flex flex-col p-3 sm:p-5 overflow-hidden">
@@ -177,6 +178,7 @@ export function App() {
             targetCursor={targetCursor}
             gameInfo={roundInfo}
             noCursor={roundInfo.noCursor}
+            onCancelGame={engineState !== "menu" ? handleReturnToMenu : undefined}
             onDocChange={handleDocChange}
             onKeypress={handleKeypress}
           />

@@ -1,7 +1,14 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { EditorView, lineNumbers, highlightActiveLineGutter } from "@codemirror/view";
+import {
+  EditorView,
+  lineNumbers,
+  highlightActiveLineGutter,
+  drawSelection,
+  rectangularSelection,
+} from "@codemirror/view";
 import { EditorState } from "@codemirror/state";
-import { vim, getCM } from "@replit/codemirror-vim";
+import { vim, getCM, Vim } from "@replit/codemirror-vim";
+import { RotateCcw } from "lucide-react";
 import type { ThemeConfig } from "../utils/themes";
 import { sound } from "../utils/audio";
 
@@ -16,6 +23,7 @@ interface NeovimWindowProps {
     totalRounds?: number;
   };
   noCursor?: boolean;
+  onCancelGame?: () => void;
   onDocChange: (text: string) => void;
   onKeypress: (key: string) => void;
 }
@@ -26,6 +34,7 @@ export const NeovimWindow: React.FC<NeovimWindowProps> = ({
   targetCursor,
   gameInfo,
   noCursor = false,
+  onCancelGame,
   onDocChange,
   onKeypress,
 }) => {
@@ -35,10 +44,12 @@ export const NeovimWindow: React.FC<NeovimWindowProps> = ({
 
   const onDocChangeRef = useRef(onDocChange);
   const onKeypressRef = useRef(onKeypress);
+  const onCancelGameRef = useRef(onCancelGame);
 
   useEffect(() => {
     onDocChangeRef.current = onDocChange;
     onKeypressRef.current = onKeypress;
+    onCancelGameRef.current = onCancelGame;
   });
 
   const [vimMode, setVimMode] = useState<string>("NORMAL");
@@ -112,6 +123,16 @@ export const NeovimWindow: React.FC<NeovimWindowProps> = ({
         ".cm-line": {
           padding: "0 12px",
         },
+        "&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, ::selection, .cm-content ::selection":
+          {
+            backgroundColor: "rgba(137, 180, 250, 0.45) !important",
+          },
+        "&.cm-focused .cm-selectionBackground": {
+          backgroundColor: "rgba(137, 180, 250, 0.45) !important",
+        },
+        ".cm-selectionMatch": {
+          backgroundColor: "rgba(245, 224, 220, 0.3) !important",
+        },
       },
       { dark: true },
     );
@@ -149,6 +170,8 @@ export const NeovimWindow: React.FC<NeovimWindowProps> = ({
       extensions: [
         lineNumbers(),
         highlightActiveLineGutter(),
+        drawSelection(),
+        rectangularSelection(),
         themeExtension,
         vim(),
         updateListener,
@@ -176,6 +199,15 @@ export const NeovimWindow: React.FC<NeovimWindowProps> = ({
         onKeypressRef.current(key);
       });
     }
+
+    try {
+      Vim.defineEx("quit", "q", () => {
+        onCancelGameRef.current?.();
+      });
+      Vim.defineEx("q!", "q!", () => {
+        onCancelGameRef.current?.();
+      });
+    } catch {}
 
     view.focus();
 
@@ -220,14 +252,51 @@ export const NeovimWindow: React.FC<NeovimWindowProps> = ({
           </span>
         </div>
 
-        {gameInfo?.currentRound && gameInfo.totalRounds && (
-          <div className="flex items-center gap-1 text-[11px]">
-            <span className="opacity-50">Round:</span>
-            <span className="font-bold tabular-nums" style={{ color: theme.accentGreen }}>
-              {gameInfo.currentRound} / {gameInfo.totalRounds}
-            </span>
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          {gameInfo?.currentRound && gameInfo.totalRounds && gameInfo.totalRounds > 1 && (
+            <div className="flex items-center gap-1 text-[11px]">
+              <span className="opacity-50">Round:</span>
+              <span className="font-bold tabular-nums" style={{ color: theme.accentGreen }}>
+                {gameInfo.currentRound} / {gameInfo.totalRounds}
+              </span>
+            </div>
+          )}
+
+          {gameInfo?.totalRounds === 1 && gameInfo.gameId === "snake" && (
+            <div className="flex items-center gap-1 text-[11px]">
+              <span
+                className="font-bold uppercase tracking-wider text-[10px] px-1.5 py-0.5 rounded border"
+                style={{
+                  color: theme.accentYellow,
+                  borderColor: `${theme.accentYellow}40`,
+                  backgroundColor: `${theme.accentYellow}10`,
+                }}
+              >
+                Continuous Arcade
+              </span>
+            </div>
+          )}
+
+          {onCancelGame && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onCancelGame();
+              }}
+              className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold transition-all hover:brightness-125 active:scale-95 cursor-pointer shadow-sm"
+              style={{
+                backgroundColor: "rgba(243, 139, 168, 0.15)",
+                color: theme.accentRed,
+                border: "1px solid rgba(243, 139, 168, 0.35)",
+              }}
+              title="Return to Menu (or type :q in Vim)"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>Cancel Game</span>
+              <span className="opacity-60 text-[9px] font-mono hidden sm:inline">(:q)</span>
+            </button>
+          )}
+        </div>
       </div>
 
       <div

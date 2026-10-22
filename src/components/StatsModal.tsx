@@ -25,10 +25,19 @@ export const StatsModal: React.FC<StatsModalProps> = ({ summary, theme, onReplay
     } catch {}
   }, [theme]);
 
+  const isSnake = summary.gameId === "snake";
   const accuracy = Math.round((summary.successes / summary.roundCount) * 100);
+  const snakeFoods = summary.records[0]?.score || 0;
+  const snakeScore = summary.totalScore ?? snakeFoods * 10;
 
   const handleCopyShare = () => {
-    const text = `🏆 VimBeGood Web Result
+    const text = isSnake
+      ? `🐍 VimBeGood Snake Arcade Result
+Score: ${snakeScore} points (${snakeFoods} foods eaten)
+Time Survived: ${summary.averageTime}s | Speed: ${summary.difficulty}
+
+Play VimBeGood: https://github.com/ahmad-006/vim-be-good-web`
+      : `🏆 VimBeGood Web Result
 Mode: ${summary.gameId} | Difficulty: ${summary.difficulty}
 Accuracy: ${summary.successes}/${summary.roundCount} (${accuracy}%)
 Average Time: ${summary.averageTime}s
@@ -80,9 +89,11 @@ Test your vim motions: https://github.com/ahmad-006/vim-be-good-web`;
               className="p-3.5 rounded-lg border text-center"
               style={{ backgroundColor: theme.bg, borderColor: theme.border }}
             >
-              <div className="text-[11px] opacity-60 uppercase tracking-wider mb-1">Score</div>
+              <div className="text-[11px] opacity-60 uppercase tracking-wider mb-1">
+                {isSnake ? "Final Score" : "Score"}
+              </div>
               <div className="text-lg font-bold tabular-nums" style={{ color: theme.accentGreen }}>
-                {summary.successes} / {summary.roundCount}
+                {isSnake ? `${snakeScore} pts` : `${summary.successes} / ${summary.roundCount}`}
               </div>
             </div>
 
@@ -91,7 +102,7 @@ Test your vim motions: https://github.com/ahmad-006/vim-be-good-web`;
               style={{ backgroundColor: theme.bg, borderColor: theme.border }}
             >
               <div className="text-[11px] opacity-60 uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
-                <Clock className="w-3 h-3" /> Avg Time
+                <Clock className="w-3 h-3" /> {isSnake ? "Survived" : "Avg Time"}
               </div>
               <div className="text-lg font-bold tabular-nums" style={{ color: theme.accent }}>
                 {summary.averageTime}s
@@ -102,41 +113,48 @@ Test your vim motions: https://github.com/ahmad-006/vim-be-good-web`;
               className="p-3.5 rounded-lg border text-center"
               style={{ backgroundColor: theme.bg, borderColor: theme.border }}
             >
-              <div className="text-[11px] opacity-60 uppercase tracking-wider mb-1">Accuracy</div>
+              <div className="text-[11px] opacity-60 uppercase tracking-wider mb-1">
+                {isSnake ? "Foods Eaten" : "Accuracy"}
+              </div>
               <div className="text-lg font-bold tabular-nums" style={{ color: theme.accentYellow }}>
-                {accuracy}%
+                {isSnake ? `${snakeFoods}` : `${accuracy}%`}
               </div>
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <div className="text-[11px] uppercase tracking-wider opacity-50 font-semibold px-1">
-              Rounds Breakdown
-            </div>
-            <div
-              className="max-h-36 overflow-y-auto rounded-lg border divide-y p-1 text-xs"
-              style={{
-                backgroundColor: theme.bg,
-                borderColor: theme.border,
-              }}
-            >
-              {summary.records.map((rec) => (
-                <div key={rec.roundNum} className="flex items-center justify-between py-1.5 px-3">
-                  <span className="opacity-70">Round {rec.roundNum}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="tabular-nums opacity-60 text-[11px]">
-                      {rec.timeTaken.toFixed(2)}s
-                    </span>
-                    {rec.success ? (
-                      <CheckCircle2 className="w-3.5 h-3.5" style={{ color: theme.accentGreen }} />
-                    ) : (
-                      <XCircle className="w-3.5 h-3.5" style={{ color: theme.accentRed }} />
-                    )}
+          {!isSnake && (
+            <div className="space-y-1.5">
+              <div className="text-[11px] uppercase tracking-wider opacity-50 font-semibold px-1">
+                Rounds Breakdown
+              </div>
+              <div
+                className="max-h-36 overflow-y-auto rounded-lg border divide-y p-1 text-xs"
+                style={{
+                  backgroundColor: theme.bg,
+                  borderColor: theme.border,
+                }}
+              >
+                {summary.records.map((rec) => (
+                  <div key={rec.roundNum} className="flex items-center justify-between py-1.5 px-3">
+                    <span className="opacity-70">Round {rec.roundNum}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="tabular-nums opacity-60 text-[11px]">
+                        {rec.timeTaken.toFixed(2)}s
+                      </span>
+                      {rec.success ? (
+                        <CheckCircle2
+                          className="w-3.5 h-3.5"
+                          style={{ color: theme.accentGreen }}
+                        />
+                      ) : (
+                        <XCircle className="w-3.5 h-3.5" style={{ color: theme.accentRed }} />
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="grid grid-cols-3 gap-2.5 pt-2">
             <button

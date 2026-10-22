@@ -18,6 +18,7 @@ export interface RoundConfig {
   instructions: string[];
   noCursor?: boolean;
   canEndRound?: boolean;
+  isContinuous?: boolean;
 }
 
 export interface RenderResult {
@@ -46,6 +47,7 @@ export interface RoundRecord {
   success: boolean;
   timeTaken: number;
   timestamp: number;
+  score?: number;
 }
 
 export interface GameSummary {
@@ -57,6 +59,7 @@ export interface GameSummary {
   timings: number[];
   averageTime: number;
   records: RoundRecord[];
+  totalScore?: number;
 }
 
 export type ThemeName = "catppuccin" | "tokyonight" | "gruvbox" | "rosepine" | "crt_green";
