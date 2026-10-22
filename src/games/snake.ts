@@ -19,14 +19,14 @@ export class SnakeRound implements GameRound {
   name = "snake";
   difficulty: Difficulty;
 
-  // Square arena: 42 columns x 16 rows (approx 1:1 visual aspect ratio in monospace, fits 720p+ perfectly)
-  private width = 42;
-  private height = 16;
+  // Compact 1:1 proportional arena: 34 columns x 11 rows (fits 100% inside any viewport with zero scrolling)
+  private width = 34;
+  private height = 11;
 
   private snake: Coord[] = [];
   private dir: Coord = { x: 1, y: 0 };
   private nextDir: Coord = { x: 1, y: 0 };
-  private food: Coord = { x: 30, y: 8 };
+  private food: Coord = { x: 25, y: 5 };
 
   private score = 0;
   private speed: number;
@@ -37,11 +37,7 @@ export class SnakeRound implements GameRound {
   private onUpdateCallback: ((lines: string[]) => void) | null = null;
   private onEndCallback: ((success: boolean) => void) | null = null;
 
-  private instructions = [
-    "Classic Continuous Snake inside Neovim buffer (Wrap-around edges).",
-    "Steer with h, j, k, l or Arrows • Eat food (O) to grow • Don't bite yourself!",
-    "----------------------------------------------------------------------",
-  ];
+  private instructions = ["Steer: h/j/k/l or Arrows • Wrap Edges: ON • Eat (O) to Grow"];
 
   constructor(difficulty: Difficulty) {
     this.difficulty = difficulty;
@@ -141,7 +137,7 @@ export class SnakeRound implements GameRound {
     const dirStr =
       this.dir.x === 1 ? "RIGHT" : this.dir.x === -1 ? "LEFT" : this.dir.y === 1 ? "DOWN" : "UP";
     lines.push(
-      `Score: ${this.score * 10} | Foods: ${this.score} | Length: ${this.snake.length} | Edges: Wrap | Dir: ${dirStr} | Speed: ${this.speed}ms`,
+      `Score: ${this.score * 10} | Foods: ${this.score} | Length: ${this.snake.length} | Edges: Wrap | Dir: ${dirStr}`,
     );
 
     return lines;

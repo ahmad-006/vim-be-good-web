@@ -2,13 +2,18 @@
   "name": "vim-be-good-web",
   "version": "0.0.0",
   "private": true,
+  "bin": {
+    "vite": "./bin/vite.js"
+  },
   "type": "module",
   "scripts": {
     "dev": "vp dev",
     "build": "tsc -b && vp build",
+    "vite": "bun ./bin/vite.js",
     "lint": "vp lint",
     "preview": "vp preview",
-    "prepare": "vp config"
+    "prepare": "vp config || true",
+    "postinstall": "ln -sf ../../bin/vite.js node_modules/.bin/vite 2>/dev/null || true"
   },
   "dependencies": {
     "@codemirror/state": "^6.7.6",

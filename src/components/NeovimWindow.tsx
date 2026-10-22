@@ -64,10 +64,20 @@ export const NeovimWindow: React.FC<NeovimWindowProps> = ({
       const currentDoc = view.state.doc.toString();
       if (currentDoc === text) return;
 
+      // Preserve scroll position across document updates to prevent scroll snapping
+      const scrollDOM = view.scrollDOM;
+      const prevTop = scrollDOM ? scrollDOM.scrollTop : 0;
+      const prevLeft = scrollDOM ? scrollDOM.scrollLeft : 0;
+
       const transaction = view.state.update({
         changes: { from: 0, to: currentDoc.length, insert: text },
       });
       view.dispatch(transaction);
+
+      if (scrollDOM) {
+        scrollDOM.scrollTop = prevTop;
+        scrollDOM.scrollLeft = prevLeft;
+      }
 
       if (cursorLine !== undefined && !noCursor) {
         try {
@@ -78,7 +88,7 @@ export const NeovimWindow: React.FC<NeovimWindowProps> = ({
 
           view.dispatch({
             selection: { anchor: pos, head: pos },
-            scrollIntoView: true,
+            scrollIntoView: false,
           });
         } catch {}
       }
@@ -332,6 +342,78 @@ export const NeovimWindow: React.FC<NeovimWindowProps> = ({
         </div>
 
         <div className="flex items-center gap-4 text-[11px] opacity-80 tabular-nums">
+          {gameInfo?.gameId === "snake" && (
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onKeypressRef.current("h");
+                }}
+                className="px-1.5 py-0.5 rounded text-[10px] font-bold border transition-all active:scale-90 cursor-pointer select-none"
+                style={{
+                  backgroundColor: "rgba(255, 255, 255, 0.05)",
+                  borderColor: theme.border,
+                  color: theme.accent,
+                }}
+                title="Steer Left (h)"
+              >
+                ◀ H
+              </button>
+              <button
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onKeypressRef.current("j");
+                }}
+                className="px-1.5 py-0.5 rounded text-[10px] font-bold border transition-all active:scale-90 cursor-pointer select-none"
+                style={{
+                  backgroundColor: "rgba(255, 255, 255, 0.05)",
+                  borderColor: theme.border,
+                  color: theme.accent,
+                }}
+                title="Steer Down (j)"
+              >
+                ▼ J
+              </button>
+              <button
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onKeypressRef.current("k");
+                }}
+                className="px-1.5 py-0.5 rounded text-[10px] font-bold border transition-all active:scale-90 cursor-pointer select-none"
+                style={{
+                  backgroundColor: "rgba(255, 255, 255, 0.05)",
+                  borderColor: theme.border,
+                  color: theme.accent,
+                }}
+                title="Steer Up (k)"
+              >
+                ▲ K
+              </button>
+              <button
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onKeypressRef.current("l");
+                }}
+                className="px-1.5 py-0.5 rounded text-[10px] font-bold border transition-all active:scale-90 cursor-pointer select-none"
+                style={{
+                  backgroundColor: "rgba(255, 255, 255, 0.05)",
+                  borderColor: theme.border,
+                  color: theme.accent,
+                }}
+                title="Steer Right (l)"
+              >
+                ▶ L
+              </button>
+            </div>
+          )}
           <span>{noCursor ? "ARCADE" : `Ln ${cursorPos.line}, Col ${cursorPos.col + 1}`}</span>
           <span className="opacity-50">•</span>
           <span>{scrollProgress}</span>

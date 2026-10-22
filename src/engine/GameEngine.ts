@@ -124,7 +124,7 @@ export class GameEngine {
 
     const headerLines =
       config.isContinuous || this.gameId === "snake"
-        ? [`=== [VimBeGood] Snake Arcade ===`, ...this.currentInstructions, ""]
+        ? [`=== [VimBeGood] Snake Arcade ===`, ...this.currentInstructions]
         : [
             `=== [VimBeGood] Round ${this.currentRound} / ${this.totalRounds} ===`,
             ...this.currentInstructions,
