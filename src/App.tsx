@@ -17,6 +17,7 @@ export function App() {
   const [engineState, setEngineState] = useState<EngineState>("menu");
   const [menuEngine] = useState(() => new MenuEngine("relative", "easy"));
   const [gameEngine, setGameEngine] = useState<GameEngine | null>(null);
+  const gameEngineRef = useRef<GameEngine | null>(null);
 
   const [bufferContent, setBufferContent] = useState<string>(() =>
     menuEngine.renderMenuLines().join("\n"),
@@ -66,8 +67,18 @@ export function App() {
     [engineState, gameEngine],
   );
 
+  useEffect(() => {
+    return () => {
+      gameEngineRef.current?.destroy();
+      gameEngineRef.current = null;
+    };
+  }, []);
+
   const handleReturnToMenu = useCallback(() => {
-    gameEngine?.clearTimer();
+    if (gameEngineRef.current) {
+      gameEngineRef.current.destroy();
+      gameEngineRef.current = null;
+    }
     setGameEngine(null);
     setSummary(null);
     setEngineState("menu");
@@ -79,18 +90,25 @@ export function App() {
       difficulty: menuEngine.getSelection().difficulty,
       noCursor: false,
     });
-  }, [gameEngine, menuEngine]);
+  }, [menuEngine]);
 
   const startGame = useCallback((gameId: GameId, difficulty: Difficulty) => {
+    if (gameEngineRef.current) {
+      gameEngineRef.current.destroy();
+      gameEngineRef.current = null;
+    }
+
     setEngineState("countdown");
     setSummary(null);
 
     const engine = new GameEngine(gameId, difficulty, {
       onRenderBuffer: (text, line, col) => {
+        if (engine.isDestroyed || gameEngineRef.current !== engine) return;
         setBufferContent(text);
         setTargetCursor({ line, col });
       },
       onRoundAdvance: (roundNum, total, noCursor) => {
+        if (engine.isDestroyed || gameEngineRef.current !== engine) return;
         setRoundInfo({
           gameId,
           difficulty,
@@ -100,6 +118,7 @@ export function App() {
         });
       },
       onGameOver: (gameSummary) => {
+        if (engine.isDestroyed || gameEngineRef.current !== engine) return;
         setEngineState("game_over");
         setSummary(gameSummary);
         const endLines = engine.getEndGameLines(gameSummary).join("\n");
@@ -108,9 +127,11 @@ export function App() {
       },
     });
 
+    gameEngineRef.current = engine;
     setGameEngine(engine);
 
     engine.startCountdown(() => {
+      if (engine.isDestroyed || gameEngineRef.current !== engine) return;
       setEngineState("playing");
       engine.startRound();
     });

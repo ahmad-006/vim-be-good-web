@@ -31,6 +31,7 @@ export class SnakeRound implements GameRound {
   private score = 0;
   private speed: number;
   private intervalId: ReturnType<typeof setInterval> | null = null;
+  private deathTimerId: ReturnType<typeof setTimeout> | null = null;
   private isDead = false;
 
   private onUpdateCallback: ((lines: string[]) => void) | null = null;
@@ -200,9 +201,17 @@ export class SnakeRound implements GameRound {
 
   private handleDeath() {
     this.isDead = true;
-    this.cleanup();
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
     this.onUpdateCallback?.(this.drawGrid());
-    setTimeout(() => {
+
+    if (this.deathTimerId) {
+      clearTimeout(this.deathTimerId);
+    }
+    this.deathTimerId = setTimeout(() => {
+      this.deathTimerId = null;
       this.onEndCallback?.(false); // Fail / game over session
     }, 1200);
   }
@@ -212,6 +221,12 @@ export class SnakeRound implements GameRound {
       clearInterval(this.intervalId);
       this.intervalId = null;
     }
+    if (this.deathTimerId) {
+      clearTimeout(this.deathTimerId);
+      this.deathTimerId = null;
+    }
+    this.onUpdateCallback = null;
+    this.onEndCallback = null;
   }
 
   checkForWin(_lines: string[]): boolean {

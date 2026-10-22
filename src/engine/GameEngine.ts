@@ -17,8 +17,10 @@ export class GameEngine {
   public activeRound: GameRound | null = null;
   public currentInstructions: string[] = [];
   public currentCanvasLines: string[] = [];
+  public isDestroyed = false;
 
   private timerId: ReturnType<typeof setTimeout> | null = null;
+  private countdownTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private roundStartTime = 0;
   private records: RoundRecord[] = [];
   private successes = 0;
@@ -85,19 +87,25 @@ export class GameEngine {
   }
 
   startCountdown(onComplete: () => void) {
+    if (this.isDestroyed) return;
+    this.clearCountdown();
     let count = 3;
     sound.playCountdown(count);
 
     const step = () => {
+      if (this.isDestroyed) return;
       if (count > 0) {
         const text = `\n\n\n             Game Starts in ${count}...\n\n`;
         this.onRenderBuffer(text, 4, 13);
         sound.playCountdown(count);
         count--;
-        setTimeout(step, 1000);
+        this.countdownTimeoutId = setTimeout(step, 1000);
       } else {
         sound.playCountdown(0);
-        onComplete();
+        this.countdownTimeoutId = null;
+        if (!this.isDestroyed) {
+          onComplete();
+        }
       }
     };
 
@@ -105,6 +113,7 @@ export class GameEngine {
   }
 
   startRound() {
+    if (this.isDestroyed) return;
     this.clearTimer();
     this.activeRound = this.createRoundInstance(this.gameId);
     const config = this.activeRound.getConfig();
@@ -169,6 +178,7 @@ export class GameEngine {
   }
 
   private handleRoundFinish(success: boolean) {
+    if (this.isDestroyed) return;
     this.clearTimer();
     const duration = Math.max(0.1, (performance.now() - this.roundStartTime) / 1000);
 
@@ -201,6 +211,7 @@ export class GameEngine {
   }
 
   private endGame() {
+    if (this.isDestroyed) return;
     this.clearTimer();
     const sum = this.timings.reduce((acc, curr) => acc + curr, 0);
     const average = this.timings.length > 0 ? sum / this.timings.length : 0;
@@ -218,7 +229,9 @@ export class GameEngine {
       totalScore: this.gameId === "snake" ? totalScore : undefined,
     };
 
-    this.onGameOver(summary);
+    if (!this.isDestroyed) {
+      this.onGameOver(summary);
+    }
   }
 
   getEndGameLines(summary: GameSummary): string[] {
@@ -255,11 +268,25 @@ export class GameEngine {
     ];
   }
 
+  clearCountdown() {
+    if (this.countdownTimeoutId) {
+      clearTimeout(this.countdownTimeoutId);
+      this.countdownTimeoutId = null;
+    }
+  }
+
   clearTimer() {
     if (this.timerId) {
       clearTimeout(this.timerId);
       this.timerId = null;
     }
+    this.clearCountdown();
     this.activeRound?.cleanup?.();
+  }
+
+  destroy() {
+    this.isDestroyed = true;
+    this.clearTimer();
+    this.activeRound = null;
   }
 }
