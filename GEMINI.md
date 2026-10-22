@@ -69,7 +69,11 @@ The UI is modeled directly after a Neovim floating window and statusline, replic
    - Targets: `f<char>`, `t<char>`, `~`.
    - Renders Primeagen meme sentences with a `^` pointer underneath a character. User must seek and invert case (`~`).
 6. **`snake`** (Arcade Buffer Snake):
-   - Continuous LibUV-style game tick loop inside the buffer canvas. Eat `O` food to grow, avoid wall/body collisions.
+   - Real-time game tick loop inside the Neovim buffer.
+   - Steer snake (`@###`) using `h`, `j`, `k`, `l` or arrow keys.
+   - **Continuous Wrap-around Edges:** Toroidal wrap mechanics (traversing past any edge seamlessly wraps to the opposite side). Self-collision remains lethal.
+   - **Optimized Square Arena:** 42-column by 16-row grid ($~1:1$ visual pixel aspect ratio in monospace), fits perfectly in 720p+ viewports without scrolling.
+   - **Cursor Suppression:** CodeMirror text cursor and active line highlights are suppressed in arcade mode (`noCursor: true`), with statusline displaying `ARCADE`.
 7. **`visual-block`** _(New Web Exclusive)_:
    - Targets: `<C-v>`, `I`, `// `, `<Esc>`.
    - Multi-line code block where user must comment out 5 lines simultaneously using visual block insertion.
