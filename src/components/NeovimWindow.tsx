@@ -15,6 +15,7 @@ interface NeovimWindowProps {
     currentRound?: number;
     totalRounds?: number;
   };
+  noCursor?: boolean;
   onDocChange: (text: string) => void;
   onKeypress: (key: string) => void;
 }
@@ -24,6 +25,7 @@ export const NeovimWindow: React.FC<NeovimWindowProps> = ({
   theme,
   targetCursor,
   gameInfo,
+  noCursor = false,
   onDocChange,
   onKeypress,
 }) => {
@@ -43,32 +45,35 @@ export const NeovimWindow: React.FC<NeovimWindowProps> = ({
   const [cursorPos, setCursorPos] = useState({ line: 1, col: 0 });
   const [scrollProgress, setScrollProgress] = useState("All");
 
-  const setContentAndCursor = useCallback((text: string, cursorLine?: number, cursorCol = 0) => {
-    const view = editorViewRef.current;
-    if (!view) return;
+  const setContentAndCursor = useCallback(
+    (text: string, cursorLine?: number, cursorCol = 0) => {
+      const view = editorViewRef.current;
+      if (!view) return;
 
-    const currentDoc = view.state.doc.toString();
-    if (currentDoc === text) return;
+      const currentDoc = view.state.doc.toString();
+      if (currentDoc === text) return;
 
-    const transaction = view.state.update({
-      changes: { from: 0, to: currentDoc.length, insert: text },
-    });
-    view.dispatch(transaction);
+      const transaction = view.state.update({
+        changes: { from: 0, to: currentDoc.length, insert: text },
+      });
+      view.dispatch(transaction);
 
-    if (cursorLine !== undefined) {
-      try {
-        const doc = view.state.doc;
-        const targetLineNum = Math.min(Math.max(1, cursorLine), doc.lines);
-        const lineObj = doc.line(targetLineNum);
-        const pos = Math.min(lineObj.from + cursorCol, lineObj.to);
+      if (cursorLine !== undefined && !noCursor) {
+        try {
+          const doc = view.state.doc;
+          const targetLineNum = Math.min(Math.max(1, cursorLine), doc.lines);
+          const lineObj = doc.line(targetLineNum);
+          const pos = Math.min(lineObj.from + cursorCol, lineObj.to);
 
-        view.dispatch({
-          selection: { anchor: pos, head: pos },
-          scrollIntoView: true,
-        });
-      } catch {}
-    }
-  }, []);
+          view.dispatch({
+            selection: { anchor: pos, head: pos },
+            scrollIntoView: true,
+          });
+        } catch {}
+      }
+    },
+    [noCursor],
+  );
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -181,12 +186,12 @@ export const NeovimWindow: React.FC<NeovimWindowProps> = ({
   }, [theme]);
 
   useEffect(() => {
-    if (targetCursor) {
+    if (targetCursor && !noCursor) {
       setContentAndCursor(initialContent, targetCursor.line, targetCursor.col);
     } else {
       setContentAndCursor(initialContent);
     }
-  }, [initialContent, targetCursor, setContentAndCursor]);
+  }, [initialContent, targetCursor, noCursor, setContentAndCursor]);
 
   return (
     <div
@@ -225,7 +230,10 @@ export const NeovimWindow: React.FC<NeovimWindowProps> = ({
         )}
       </div>
 
-      <div ref={containerRef} className="flex-1 w-full overflow-hidden text-sm" />
+      <div
+        ref={containerRef}
+        className={`flex-1 w-full overflow-hidden text-sm ${noCursor ? "no-cursor" : ""}`}
+      />
 
       <div
         className="flex items-center justify-between px-3 py-1 text-xs select-none border-t"
@@ -255,9 +263,7 @@ export const NeovimWindow: React.FC<NeovimWindowProps> = ({
         </div>
 
         <div className="flex items-center gap-4 text-[11px] opacity-80 tabular-nums">
-          <span>
-            Ln {cursorPos.line}, Col {cursorPos.col + 1}
-          </span>
+          <span>{noCursor ? "ARCADE" : `Ln ${cursorPos.line}, Col ${cursorPos.col + 1}`}</span>
           <span className="opacity-50">•</span>
           <span>{scrollProgress}</span>
         </div>

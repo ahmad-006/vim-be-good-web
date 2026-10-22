@@ -43,3 +43,32 @@
     6px 100%;
   pointer-events: none;
 }
+
+/* Suppress CodeMirror cursor and active line highlighting in no-cursor mode (e.g., Snake) */
+.no-cursor .cm-cursor,
+.no-cursor .cm-cursorLayer,
+.no-cursor .cm-fat-cursor,
+.no-cursor .cm-cursor-primary,
+.no-cursor .cm-cursor-secondary,
+.no-cursor .cm-dropCursor {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  border: none !important;
+}
+
+.no-cursor .cm-content {
+  caret-color: transparent !important;
+}
+
+.no-cursor .cm-activeLine {
+  background-color: transparent !important;
+}
+
+.no-cursor .cm-activeLineGutter {
+  background-color: transparent !important;
+  color: inherit !important;
+  font-weight: normal !important;
+}

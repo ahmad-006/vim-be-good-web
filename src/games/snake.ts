@@ -28,13 +28,14 @@ export class SnakeRound implements GameRound {
   name = "snake";
   difficulty: Difficulty;
 
-  private width = 32;
-  private height = 12;
+  // Square arena: 42 columns x 16 rows (approx 1:1 visual aspect ratio in monospace, fits 720p+ perfectly)
+  private width = 42;
+  private height = 16;
 
   private snake: Coord[] = [];
   private dir: Coord = { x: 1, y: 0 };
   private nextDir: Coord = { x: 1, y: 0 };
-  private food: Coord = { x: 22, y: 4 };
+  private food: Coord = { x: 30, y: 8 };
 
   private score = 0;
   private targetFoods: number;
@@ -46,11 +47,9 @@ export class SnakeRound implements GameRound {
   private onEndCallback: ((success: boolean) => void) | null = null;
 
   private instructions = [
-    "Classic game of Snake inside Neovim buffer.",
-    "1. Use h, j, k, l to steer (h: left, j: down, k: up, l: right)",
-    "2. Eat food (O) to grow and earn points",
-    "3. Do not crash into walls or yourself",
-    "------------------------------------------------------------------",
+    "Classic Snake inside Neovim buffer. Edges are continuous (wrap-around)!",
+    "Steer with h, j, k, l or Arrows • Eat food (O) to reach target score",
+    "----------------------------------------------------------------------",
   ];
 
   constructor(difficulty: Difficulty) {
@@ -62,11 +61,12 @@ export class SnakeRound implements GameRound {
 
   private initSnake() {
     const startY = Math.floor(this.height / 2);
+    const startX = Math.floor(this.width / 4);
     this.snake = [
-      { x: 10, y: startY }, // head
-      { x: 9, y: startY },
-      { x: 8, y: startY },
-      { x: 7, y: startY }, // tail
+      { x: startX + 3, y: startY }, // head
+      { x: startX + 2, y: startY },
+      { x: startX + 1, y: startY },
+      { x: startX, y: startY }, // tail
     ];
     this.dir = { x: 1, y: 0 };
     this.nextDir = { x: 1, y: 0 };
@@ -78,10 +78,10 @@ export class SnakeRound implements GameRound {
   private spawnFood() {
     let valid = false;
     let attempts = 0;
-    while (!valid && attempts < 100) {
+    while (!valid && attempts < 200) {
       attempts++;
-      const fx = Math.floor(Math.random() * (this.width - 2)) + 1;
-      const fy = Math.floor(Math.random() * (this.height - 2)) + 1;
+      const fx = Math.floor(Math.random() * this.width);
+      const fy = Math.floor(Math.random() * this.height);
 
       const collidesWithSnake = this.snake.some((s) => s.x === fx && s.y === fy);
       if (!collidesWithSnake) {
@@ -106,13 +106,13 @@ export class SnakeRound implements GameRound {
 
   handleKey(key: string) {
     const k = key.toLowerCase();
-    if ((k === "h" || k === "arrowleft") && this.dir.x === 0) {
+    if ((k === "h" || k === "arrowleft" || k === "<left>") && this.dir.x === 0) {
       this.nextDir = { x: -1, y: 0 };
-    } else if ((k === "l" || k === "arrowright") && this.dir.x === 0) {
+    } else if ((k === "l" || k === "arrowright" || k === "<right>") && this.dir.x === 0) {
       this.nextDir = { x: 1, y: 0 };
-    } else if ((k === "k" || k === "arrowup") && this.dir.y === 0) {
+    } else if ((k === "k" || k === "arrowup" || k === "<up>") && this.dir.y === 0) {
       this.nextDir = { x: 0, y: -1 };
-    } else if ((k === "j" || k === "arrowdown") && this.dir.y === 0) {
+    } else if ((k === "j" || k === "arrowdown" || k === "<down>") && this.dir.y === 0) {
       this.nextDir = { x: 0, y: 1 };
     }
   }
@@ -141,13 +141,12 @@ export class SnakeRound implements GameRound {
 
     // Bottom border
     lines.push("+" + "-".repeat(this.width) + "+");
-    lines.push("");
 
     // Status / HUD
     const dirStr =
       this.dir.x === 1 ? "RIGHT" : this.dir.x === -1 ? "LEFT" : this.dir.y === 1 ? "DOWN" : "UP";
     lines.push(
-      `Score: ${this.score * 10} | Target: ${this.targetFoods * 10} | Foods: ${this.score}/${this.targetFoods} | Dir: ${dirStr} | Speed: ${this.speed}ms`,
+      `Score: ${this.score * 10} | Target: ${this.targetFoods * 10} | Foods: ${this.score}/${this.targetFoods} | Edges: Wrap | Dir: ${dirStr} | Speed: ${this.speed}ms`,
     );
 
     return lines;
@@ -156,8 +155,8 @@ export class SnakeRound implements GameRound {
   render(): RenderResult {
     return {
       lines: this.drawGrid(),
-      cursorLine: Math.floor(this.height / 2) + 2,
-      cursorCol: 11,
+      cursorLine: 0,
+      cursorCol: 0,
     };
   }
 
@@ -176,16 +175,12 @@ export class SnakeRound implements GameRound {
 
     this.dir = this.nextDir;
     const head = this.snake[0];
-    const newHead: Coord = {
-      x: head.x + this.dir.x,
-      y: head.y + this.dir.y,
-    };
 
-    // Check Wall Collisions
-    if (newHead.x < 0 || newHead.x >= this.width || newHead.y < 0 || newHead.y >= this.height) {
-      this.handleDeath();
-      return;
-    }
+    // Continuous toroidal wrap-around on edges
+    const newHead: Coord = {
+      x: (((head.x + this.dir.x) % this.width) + this.width) % this.width,
+      y: (((head.y + this.dir.y) % this.height) + this.height) % this.height,
+    };
 
     // Check Self Collision
     if (this.snake.some((s) => s.x === newHead.x && s.y === newHead.y)) {

@@ -26,7 +26,7 @@ export class GameEngine {
   private timings: number[] = [];
 
   private onRenderBuffer: (fullText: string, cursorLine: number, cursorCol?: number) => void;
-  private onRoundAdvance: (roundNum: number, total: number) => void;
+  private onRoundAdvance: (roundNum: number, total: number, noCursor?: boolean) => void;
   private onGameOver: (summary: GameSummary) => void;
 
   constructor(
@@ -34,7 +34,7 @@ export class GameEngine {
     difficulty: Difficulty,
     callbacks: {
       onRenderBuffer: (fullText: string, cursorLine: number, cursorCol?: number) => void;
-      onRoundAdvance: (roundNum: number, total: number) => void;
+      onRoundAdvance: (roundNum: number, total: number, noCursor?: boolean) => void;
       onGameOver: (summary: GameSummary) => void;
     },
   ) {
@@ -125,7 +125,7 @@ export class GameEngine {
     const targetCursorLine = headerLines.length + render.cursorLine;
     this.onRenderBuffer(fullText, targetCursorLine, render.cursorCol || 0);
 
-    this.onRoundAdvance(this.currentRound, this.totalRounds);
+    this.onRoundAdvance(this.currentRound, this.totalRounds, !!config.noCursor);
     this.roundStartTime = performance.now();
 
     // Start continuous tick loop if supported (e.g. Snake)

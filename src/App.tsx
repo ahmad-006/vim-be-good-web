@@ -31,7 +31,8 @@ export function App() {
     difficulty: string;
     currentRound?: number;
     totalRounds?: number;
-  }>({ gameId: "words", difficulty: "easy" });
+    noCursor?: boolean;
+  }>({ gameId: "words", difficulty: "easy", noCursor: false });
 
   const [summary, setSummary] = useState<GameSummary | null>(null);
 
@@ -76,6 +77,7 @@ export function App() {
     setRoundInfo({
       gameId: menuEngine.getSelection().game,
       difficulty: menuEngine.getSelection().difficulty,
+      noCursor: false,
     });
   }, [gameEngine, menuEngine]);
 
@@ -88,12 +90,13 @@ export function App() {
         setBufferContent(text);
         setTargetCursor({ line, col });
       },
-      onRoundAdvance: (roundNum, total) => {
+      onRoundAdvance: (roundNum, total, noCursor) => {
         setRoundInfo({
           gameId,
           difficulty,
           currentRound: roundNum,
           totalRounds: total,
+          noCursor: !!noCursor,
         });
       },
       onGameOver: (gameSummary) => {
@@ -173,6 +176,7 @@ export function App() {
             theme={theme}
             targetCursor={targetCursor}
             gameInfo={roundInfo}
+            noCursor={roundInfo.noCursor}
             onDocChange={handleDocChange}
             onKeypress={handleKeypress}
           />
